@@ -1,37 +1,22 @@
-/// <reference types="cypress" />
-
-Cypress.Commands.add("login", (username: string, password: string) => {
-  return cy.request({
-    method: 'POST',
-    url: 'https://www.saucedemo.com/v1/login',
-    body: { username, password },
-    failOnStatusCode: false
-  });
-});
-
-Cypress.Commands.add("getInventory", () => {
-  return cy.request({
-    method: 'GET',
-    url: 'https://www.saucedemo.com/v1/inventory',
-  });
-});
-
-Cypress.Commands.add("addToCart", (itemId: string) => {
-  return cy.request({
-    method: 'POST',
-    url: 'https://www.saucedemo.com/v1/cart',
-    body: { item_id: itemId }
-  });
-});
-
-Cypress.Commands.add("checkout", (firstName: string, lastName: string, postalCode: string) => {
-  return cy.request({
-    method: 'POST',
-    url: 'https://www.saucedemo.com/v1/checkout',
-    body: {
-      first_name: firstName,
-      last_name: lastName,
-      postal_code: postalCode
-    }
-  });
-});
+Cypress.Commands.add("login", (username, password) => {
+  cy.get("#user-name").type(username)
+  cy.get("#password").type(password, { log: false })
+  cy.get("#login-button").click()
+  if (username === "standard_user") {
+    cy.url().should("include", "/inventory.html")
+    cy.get(".bm-burger-button").click()
+    cy.get("#logout_sidebar_link").click()
+  } else {
+    cy.get(".error")
+        .should("have.length", 3)
+        .then((errorMessage) => {
+          cy.wrap(errorMessage)
+              .last()
+              .invoke("text")
+              .should("be.oneOf", [
+                "Epic sadface: Sorry, this user has been locked out.",
+                "Epic sadface: Username and password do not match any user in this service",
+              ])
+        })
+  }
+})
